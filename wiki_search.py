@@ -1,0 +1,2 @@
+class WikiSearch:
+    raise NotImplementedError
