@@ -1,2 +1,6 @@
+import requests
+from bs4 import _s
+
 class Text:
-    raise NotImplementedError
+    """Intended for parsing webites text, img etc."""
+    pass

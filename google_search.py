@@ -20,8 +20,8 @@ class GoogleSearch:
         self.query = query
         self.lang = lang or DEFAULT_LANG
         self.filetype = filetype or 'all'
-        self.__base_url = 'https://www.google.com/search'
-        self.__req_params = {
+        self.BASE_URL = 'https://www.google.com/search'
+        self.__params = {
             'q': query,
             'as_filetype': self.filetype,
             'lr': 'lang_' + self.lang
@@ -41,10 +41,10 @@ class GoogleSearch:
         pool.join()
 
     def __fetch(self, offset: int):
-        p = self.__req_params.copy()
-        p.update({'start': offset})
+        req_params = self.__params.copy()
+        req_params.update({'start': offset})
         try:
-            res = requests.get(self.__base_url, params=p)
+            res = requests.get(self.BASE_URL, params=req_params)
         except req_ex.Timeout:
             raise
         assert res.status_code == requests.codes.ok
@@ -94,12 +94,18 @@ class GoogleSearch:
     @ft.setter
     def ft(self, ft):
         self.filetype = ft
-        self.__req_params.update({'as_filetype': self.filetype})
+        self.__params.update({'as_filetype': self.filetype})
         self.__get_data()
+
+    def __str__(self):
+        return 'Query: {}\nResults: {}\nFiletype: {}\nFetched: {}'.format(
+            self.query, self.results_count, self.filetype, bool(len(self.data))
+        )
 
 
 if __name__ == '__main__':
     gs = GoogleSearch(query='дитинство', results_count=50, filetype='pdf')
+    print(gs)
     for link in gs.links:
         print(link)
         break
