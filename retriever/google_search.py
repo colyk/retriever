@@ -12,22 +12,21 @@ import config
 
 class GoogleSearch:
 
-    def __init__(self, query, lang: str = None, results_count: int = 10, wiki_only: bool = False, filetype: str = None):
+    def __init__(self, query, lang: str = None, results_count: int = 10, filetype: str = ''):
         self.data = []
+        self.BASE_URL = 'https://www.google.com/search'
 
         self.query = query
         self.lang = lang or config.DEFAULT_LANG
-        self.filetype = filetype or 'all'
-        self.BASE_URL = 'https://www.google.com/search'
+        self.filetype = filetype
         self.__params = {
             'q': query,
+            'lr': 'lang_' + self.lang,
             'as_filetype': self.filetype,
-            'lr': 'lang_' + self.lang
         }
 
+        self.results_count = round(results_count, -1)
         assert 10 <= results_count <= 50
-        assert results_count % 10 == 0
-        self.results_count = results_count
 
         self.__get_data()
 
@@ -64,7 +63,7 @@ class GoogleSearch:
             )
 
     def __clean_url(self, url):
-        if self.filetype != 'all':
+        if self.filetype != '':
             return url.split('&')[0]
         return url
 
@@ -80,26 +79,36 @@ class GoogleSearch:
     @ft.setter
     def ft(self, ft):
         self.filetype = ft
-        self.__params.update({'as_filetype': self.filetype})
+        if ft == '':
+            del self.__params['as_filetype']
+        else:
+            self.__params.update({'as_filetype': self.filetype})
+        self.clean()
         self.__get_data()
 
     def __str__(self):
         return 'Query: {}\nResults: {}\nFiletype: {}\nFetched: {}'.format(
-            self.query, self.results_count, self.filetype, bool(self.data)
+            self.query, self.results_count, self.filetype or 'all', bool(self.data)
         )
+    
+    def clean(self):
+        self.data = []
+    
+    def __del__(self):
+        self.clean()
 
 
 if __name__ == '__main__':
-    gs = GoogleSearch(query='дитинство', results_count=10, filetype='pdf')
+    gs = GoogleSearch(query='дитинство', results_count=10)
     print(gs)
     for link in gs.links:
         print(link)
         break
 
     print('Got results: ', len(list(gs.links)))
-    pprint(gs.data[0])
 
-    gs.ft = 'all'
+    gs.ft = 'pdf'
+    print(gs)
     pdf_link = gs.data[0].get('link')
     print(pdf_link)
     is_available = utils.is_exist(pdf_link)
