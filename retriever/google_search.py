@@ -88,7 +88,7 @@ class GoogleSearch(Searcher):
 
     def __str__(self):
         return 'Query: {}\nResults: {}\nFiletype: {}\nFetched: {}'.format(
-            self.query, self.results_count, self.filetype or 'all', bool(self.data)
+            self.query, len(self.data), self.filetype or 'all', bool(self.data)
         )
     
     def clean(self):
