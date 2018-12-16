@@ -47,7 +47,7 @@ class GoogleSearch(Searcher):
         assert res.status_code == requests.codes.ok
         self.__parse(res.text)
 
-    def __parse(self, html:str):
+    def __parse(self, html: str):
         soup = BeautifulSoup(html, 'lxml')
         blocks = soup.find_all(class_='g')
         for block in blocks:
@@ -62,7 +62,7 @@ class GoogleSearch(Searcher):
                 }
             )
 
-    def __clean_url(self, url:str)->str:
+    def __clean_url(self, url: str)->str:
         if self.filetype != '':
             return url.split('&')[0]
         return url
@@ -90,10 +90,10 @@ class GoogleSearch(Searcher):
         return 'Query: {}\nResults: {}\nFiletype: {}\nFetched: {}'.format(
             self.query, len(self.data), self.filetype or 'all', bool(self.data)
         )
-    
+
     def clean(self):
         self.data = []
-    
+
 
 if __name__ == '__main__':
     gs = GoogleSearch(query='дитинство', results_count=10)

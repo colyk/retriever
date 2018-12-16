@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import config
 
+
 class Searcher(ABC):
 
     def __init__(self, query, lang):

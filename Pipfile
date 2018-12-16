@@ -4,12 +4,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "*"
 
 [packages]
 bs4 = "*"
 requests = "*"
 lxml = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.7"
