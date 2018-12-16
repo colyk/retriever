@@ -6,10 +6,8 @@ import requests
 import requests.exceptions as req_ex
 from bs4 import BeautifulSoup
 
-from text import Text
-from wiki_search import WikiSearch
-
-DEFAULT_LANG = 'uk'
+import utils
+import config
 
 
 class GoogleSearch:
@@ -18,7 +16,7 @@ class GoogleSearch:
         self.data = []
 
         self.query = query
-        self.lang = lang or DEFAULT_LANG
+        self.lang = lang or config.DEFAULT_LANG
         self.filetype = filetype or 'all'
         self.BASE_URL = 'https://www.google.com/search'
         self.__params = {
@@ -70,18 +68,6 @@ class GoogleSearch:
             return url.split('&')[0]
         return url
 
-    @staticmethod
-    def download_file(url: str, filename: str):
-        r = requests.get(url, stream=True)
-        downloaded_file = open(filename, 'wb')
-        for chunk in r.iter_content(chunk_size=256):
-            if chunk:
-                downloaded_file.write(chunk)
-
-    @staticmethod
-    def is_exist(url: str)->bool:
-        return requests.head(url, allow_redirects=True).ok
-
     @property
     def links(self)->Iterator:
         for block in self.data:
@@ -99,12 +85,12 @@ class GoogleSearch:
 
     def __str__(self):
         return 'Query: {}\nResults: {}\nFiletype: {}\nFetched: {}'.format(
-            self.query, self.results_count, self.filetype, bool(len(self.data))
+            self.query, self.results_count, self.filetype, bool(self.data)
         )
 
 
 if __name__ == '__main__':
-    gs = GoogleSearch(query='дитинство', results_count=50, filetype='pdf')
+    gs = GoogleSearch(query='дитинство', results_count=10, filetype='pdf')
     print(gs)
     for link in gs.links:
         print(link)
@@ -116,8 +102,8 @@ if __name__ == '__main__':
     gs.ft = 'all'
     pdf_link = gs.data[0].get('link')
     print(pdf_link)
-    is_available = GoogleSearch.is_exist(pdf_link)
+    is_available = utils.is_exist(pdf_link)
     print(is_available)
 
     if is_available:
-        GoogleSearch.download_file(pdf_link, 'file.pdf')
+        utils.download_file(pdf_link)

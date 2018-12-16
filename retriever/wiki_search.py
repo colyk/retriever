@@ -1,11 +1,11 @@
 import requests
 
-DEFAULT_LANG = 'uk'
+import config
 
 class WikiSearch:
     def __init__(self, title, lang=None):
         self.title=title
-        self.lang = lang or DEFAULT_LANG
+        self.lang = lang or import config.DEFAULT_LANG
         self.BASE_URL = 'http://{}.wikipedia.org/w/api.php'.format(self.lang)
     
     def __wiki_request(self, params):
