@@ -7,17 +7,17 @@ import requests.exceptions as req_ex
 from bs4 import BeautifulSoup
 
 import utils
-import config
+from abc_searcher import Searcher
 
 
-class GoogleSearch:
+class GoogleSearch(Searcher):
 
     def __init__(self, query, lang: str = None, results_count: int = 10, filetype: str = ''):
+        super().__init__(query=query, lang=lang)
+
         self.data = []
         self.BASE_URL = 'https://www.google.com/search'
 
-        self.query = query
-        self.lang = lang or config.DEFAULT_LANG
         self.filetype = filetype
         self.__params = {
             'q': query,
@@ -47,7 +47,7 @@ class GoogleSearch:
         assert res.status_code == requests.codes.ok
         self.__parse(res.text)
 
-    def __parse(self, html):
+    def __parse(self, html:str):
         soup = BeautifulSoup(html, 'lxml')
         blocks = soup.find_all(class_='g')
         for block in blocks:
@@ -62,13 +62,13 @@ class GoogleSearch:
                 }
             )
 
-    def __clean_url(self, url):
+    def __clean_url(self, url:str)->str:
         if self.filetype != '':
             return url.split('&')[0]
         return url
 
     @property
-    def links(self)->Iterator:
+    def links(self)->Iterator[str]:
         for block in self.data:
             yield block['link']
 
@@ -94,9 +94,6 @@ class GoogleSearch:
     def clean(self):
         self.data = []
     
-    def __del__(self):
-        self.clean()
-
 
 if __name__ == '__main__':
     gs = GoogleSearch(query='дитинство', results_count=10)
