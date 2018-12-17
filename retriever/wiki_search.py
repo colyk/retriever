@@ -1,13 +1,15 @@
 import requests
 
-import config
+from retriever.abc_searcher import Searcher
 
 
-class WikiSearch:
-    def __init__(self, title, lang=None):
-        self.title = title
-        self.lang = lang or import config.DEFAULT_LANG
+class WikiSearch(Searcher):
+    def __init__(self, query, lang=None):
+        super().__init__(query=query, lang=lang)
         self.BASE_URL = 'http://{}.wikipedia.org/w/api.php'.format(self.lang)
+
+    def start(self):
+        pass
 
     def __wiki_request(self, params):
         r = requests.get(self.BASE_URL, params=params)
@@ -19,8 +21,8 @@ class WikiSearch:
     def get(self):
         params = {
             'prop': 'extracts',
-            'explaintext': '',
-            'titles': self.title
+            'plaintext': '',
+            'titles': self.query
         }
 
         res = self.__wiki_request(params)

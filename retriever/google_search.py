@@ -1,36 +1,33 @@
 from multiprocessing.pool import ThreadPool
-from pprint import pprint
 from typing import Iterator
 
 import requests
 import requests.exceptions as req_ex
 from bs4 import BeautifulSoup
 
-import utils
-from abc_searcher import Searcher
+from retriever import utils
+from retriever.abc_searcher import Searcher
 
 
 class GoogleSearch(Searcher):
 
-    def __init__(self, query, lang: str = None, results_count: int = 10, filetype: str = ''):
+    def __init__(self, query, lang: str = None, results_count: int = 10, file_format: str = ''):
         super().__init__(query=query, lang=lang)
 
         self.data = []
         self.BASE_URL = 'https://www.google.com/search'
 
-        self.filetype = filetype
+        self.file_format = file_format
         self.__params = {
             'q': query,
             'lr': 'lang_' + self.lang,
-            'as_filetype': self.filetype,
+            'as_filetype': self.file_format,
         }
 
-        self.results_count = round(results_count, -1)
+        self.results_count = int(round(results_count, -1))
         assert 10 <= results_count <= 50
 
-        self.__get_data()
-
-    def __get_data(self):
+    def start(self):
         offsets = range(0, self.results_count, 10)
         pool = ThreadPool(self.results_count // 10)
         pool.map(self.__fetch, offsets)
@@ -53,43 +50,45 @@ class GoogleSearch(Searcher):
         for block in blocks:
             title = block.find('h3').text.strip()
             desc = block.find(class_='st').text.strip()
-            link = block.find('a').get('href')[7:]
+            url = block.find('a').get('href')[7:]
             self.data.append(
                 {
                     'title': title,
                     'desc': desc,
-                    'link': self.__clean_url(link)
+                    'link': self.__clean_url(url)
                 }
             )
 
-    def __clean_url(self, url: str)->str:
-        if self.filetype != '':
+    def __clean_url(self, url: str) -> str:
+        if self.file_format != '':
             return url.split('&')[0]
         return url
 
     @property
-    def links(self)->Iterator[str]:
+    def links(self) -> Iterator[str]:
         for block in self.data:
             yield block['link']
 
     @property
     def ft(self):
-        return self.filetype
+        return self.file_format
 
     @ft.setter
     def ft(self, ft):
-        self.filetype = ft
+        self.file_format = ft
         if ft == '':
             del self.__params['as_filetype']
         else:
-            self.__params.update({'as_filetype': self.filetype})
+            self.__params.update({'as_filetype': self.file_format})
         self.clean()
-        self.__get_data()
 
     def __str__(self):
-        return 'Query: {}\nResults: {}\nFiletype: {}\nFetched: {}'.format(
-            self.query, len(self.data), self.filetype or 'all', bool(self.data)
-        )
+        return '{!r}'.format(self.info())
+
+    def info(self):
+        return {'query': self.query, 'results': len(self.data),
+                'file_format': self.file_format or 'all',
+                'is_fetched': bool(self.data)}
 
     def clean(self):
         self.data = []
@@ -97,6 +96,7 @@ class GoogleSearch(Searcher):
 
 if __name__ == '__main__':
     gs = GoogleSearch(query='дитинство', results_count=10)
+    gs.start()
     print(gs)
     for link in gs.links:
         print(link)
@@ -105,6 +105,7 @@ if __name__ == '__main__':
     print('Got results: ', len(list(gs.links)))
 
     gs.ft = 'pdf'
+    gs.start()
     print(gs)
     pdf_link = gs.data[0].get('link')
     print(pdf_link)
